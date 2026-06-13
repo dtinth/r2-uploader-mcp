@@ -44,7 +44,8 @@ Copy the public bucket URL (looks like `pub-abc123.r2.dev`).
 4. Name: `R2 Uploader MCP`
 5. Add a policy: allow your email address (or email domain)
 6. Configure your IdP (Google, GitHub, OTP, etc.)
-7. Save — copy the **AUD tag** from the app's Basic Information
+7. On the **Additional settings** tab, turn on **Managed OAuth** — this lets non-browser MCP clients (like Claude Code) authenticate via a standard OAuth 2.0 flow instead of a browser redirect
+8. Save — copy the **AUD tag** from the app's Basic Information (under Additional settings)
 
 ### 3. Set the Worker's variables
 
