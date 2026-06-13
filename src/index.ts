@@ -24,17 +24,18 @@ interface Env {
 // (with jose's built-in cooldown) instead of refetched every time.
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-async function verifyAccessJwt(token: string, teamDomain: string, policyAud: string): Promise<void> {
+async function verifyAccessJwt(token: string, teamDomain: string, policyAud: string): Promise<string | undefined> {
   let jwks = jwksCache.get(teamDomain);
   if (!jwks) {
     jwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
     jwksCache.set(teamDomain, jwks);
   }
 
-  await jwtVerify(token, jwks, {
+  const { payload } = await jwtVerify(token, jwks, {
     issuer: teamDomain,
     audience: policyAud,
   });
+  return typeof payload.email === "string" ? payload.email : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,6 +66,7 @@ function buildMcpServer(env: Env): McpServer {
     async ({ filename }) => {
       const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
       if (!allowedExts.includes(ext)) {
+        console.log(`get_upload_url(${filename}) -> rejected, unsupported type '${ext}'`);
         return {
           isError: true,
           content: [{ type: "text" as const, text: `Unsupported type '${ext}'. Allowed: ${allowedExts.join(", ")}` }],
@@ -73,6 +75,7 @@ function buildMcpServer(env: Env): McpServer {
 
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, "/");
       const key = `${uploadPrefix}${date}/${crypto.randomUUID()}${ext}`;
+      console.log(`get_upload_url(${filename}) -> ${key}`);
 
       const r2 = new AwsClient({
         accessKeyId: env.R2_ACCESS_KEY_ID,
@@ -110,15 +113,24 @@ function buildMcpServer(env: Env): McpServer {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const { method } = request;
+    const { pathname } = new URL(request.url);
+
     const jwt = request.headers.get("Cf-Access-Jwt-Assertion");
     if (!jwt) {
+      console.log(`${method} ${pathname} -> 401 (missing Cf-Access-Jwt-Assertion)`);
       return new Response("Unauthorized: missing Cf-Access-Jwt-Assertion", { status: 401 });
     }
+
+    let email: string | undefined;
     try {
-      await verifyAccessJwt(jwt, env.TEAM_DOMAIN, env.POLICY_AUD);
+      email = await verifyAccessJwt(jwt, env.TEAM_DOMAIN, env.POLICY_AUD);
     } catch (err) {
+      console.log(`${method} ${pathname} -> 403 (${(err as Error).message})`);
       return new Response(`Forbidden: ${(err as Error).message}`, { status: 403 });
     }
+
+    console.log(`${method} ${pathname} <- ${email}`);
 
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     await buildMcpServer(env).connect(transport);

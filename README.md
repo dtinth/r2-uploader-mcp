@@ -130,3 +130,4 @@ Claude Code will:
 - The R2 public bucket URL is permanent — uploaded files don't expire
 - Public URLs are unguessable (random UUID per file) but not access-controlled — anyone with the link can view the file
 - Access logs every connection attempt in the Cloudflare One dashboard
+- The Worker logs each request (method, path, authenticated email or rejection reason) and each `get_upload_url` call to the console — view live with `wrangler tail` or in **Workers & Pages → r2-uploader-mcp → Logs**
