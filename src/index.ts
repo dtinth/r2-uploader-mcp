@@ -116,6 +116,11 @@ export default {
     const { method } = request;
     const { pathname } = new URL(request.url);
 
+    if (!env.TEAM_DOMAIN || !env.POLICY_AUD) {
+      console.log(`${method} ${pathname} -> 500 (TEAM_DOMAIN/POLICY_AUD not configured)`);
+      return new Response("Server misconfigured: TEAM_DOMAIN and/or POLICY_AUD are not set", { status: 500 });
+    }
+
     const jwt = request.headers.get("Cf-Access-Jwt-Assertion");
     if (!jwt) {
       console.log(`${method} ${pathname} -> 401 (missing Cf-Access-Jwt-Assertion)`);
