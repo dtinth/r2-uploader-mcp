@@ -22,21 +22,36 @@ Claude → Cloudflare Access OAuth dance → JWT injected as Cf-Access-Jwt-Asser
 Worker verifies JWT (issuer, audience, expiry) → serves MCP
 ```
 
+Upload URLs are presigned using the [R2 S3 API](https://developers.cloudflare.com/r2/api/s3/presigned-urls/)
+(via [aws4fetch](https://github.com/mhart/aws4fetch)) with an R2 API token —
+the Worker doesn't use an `r2_buckets` binding.
+
 ## Deploy
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/dtinth/r2-uploader-mcp)
 
-This creates the Worker and the `r2-uploads` R2 bucket in your account.
 Everything below is post-deploy dashboard configuration — no code edits or
 redeploys needed.
 
-### 1. Enable public access on the R2 bucket
+### 1. Create the R2 bucket
 
+```bash
+wrangler r2 bucket create r2-uploads
+```
+
+Enable public access in the Cloudflare dashboard:
 **R2 → r2-uploads → Settings → Public Access → Enable**
 
 Copy the public bucket URL (looks like `pub-abc123.r2.dev`).
 
-### 2. Create a Cloudflare Access self-hosted app
+### 2. Create an R2 API token
+
+1. Go to **R2 → Overview → Manage API tokens** (or **R2 → r2-uploads → Settings → API tokens**)
+2. **Create API token**
+3. Permissions: **Object Read & Write**, scoped to the `r2-uploads` bucket
+4. Copy the **Access Key ID**, **Secret Access Key**, and your **Account ID** (shown in the token details / R2 overview sidebar)
+
+### 3. Create a Cloudflare Access self-hosted app
 
 1. Go to [Cloudflare One](https://one.dash.cloudflare.com) → **Access controls → Applications**
 2. **Add an application → Self-hosted and private**
@@ -48,21 +63,32 @@ Copy the public bucket URL (looks like `pub-abc123.r2.dev`).
 8. To connect from **claude.ai** (web), add `https://claude.ai/api/mcp/auth_callback` as an allowed **redirect URI** in the Managed OAuth settings
 9. Save — copy the **AUD tag** from the app's Basic Information (under Additional settings)
 
-### 3. Set the Worker's variables
+### 4. Set the Worker's variables and secrets
 
-In the Cloudflare dashboard: **Workers & Pages → r2-uploader-mcp → Settings → Variables and Secrets**, set:
+In the Cloudflare dashboard: **Workers & Pages → r2-uploader-mcp → Settings → Variables and Secrets**:
+
+Variables:
 
 | Variable | Value |
 |---|---|
 | `TEAM_DOMAIN` | `https://yourteam.cloudflareaccess.com` |
-| `POLICY_AUD` | the AUD tag from step 2 |
+| `POLICY_AUD` | the AUD tag from step 3 |
 | `R2_PUBLIC_DOMAIN` | the public bucket domain from step 1 (e.g. `pub-abc123def456.r2.dev`) |
+| `R2_ACCOUNT_ID` | your Cloudflare account ID from step 2 |
+| `R2_BUCKET_NAME` | `r2-uploads` |
 | `ALLOWED_EXTS` *(optional)* | comma-separated extensions, e.g. `.png,.jpg,.webm,.zip,.html`. Defaults to `.png,.jpg,.jpeg,.gif,.webp` |
 | `UPLOAD_PREFIX` *(optional)* | key prefix for uploaded objects, e.g. `screenshots/`. Defaults to `uploads/` |
 
+Secrets (mark as **Secret**, not plaintext Variable):
+
+| Secret | Value |
+|---|---|
+| `R2_ACCESS_KEY_ID` | Access Key ID from step 2 |
+| `R2_SECRET_ACCESS_KEY` | Secret Access Key from step 2 |
+
 These take effect immediately — no redeploy required.
 
-### 4. Connect to Claude
+### 5. Connect to Claude
 
 In Claude settings → MCP → Add server:
 ```

@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { AwsClient } from "aws4fetch";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { z } from "zod";
 
@@ -7,9 +8,12 @@ interface Env {
   TEAM_DOMAIN: string;
   POLICY_AUD: string;
   R2_PUBLIC_DOMAIN: string;
+  R2_ACCOUNT_ID: string;
+  R2_BUCKET_NAME: string;
+  R2_ACCESS_KEY_ID: string;
+  R2_SECRET_ACCESS_KEY: string;
   ALLOWED_EXTS?: string;
   UPLOAD_PREFIX?: string;
-  BUCKET: R2Bucket;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,7 +73,16 @@ function buildMcpServer(env: Env): McpServer {
 
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, "/");
       const key = `${uploadPrefix}${date}/${crypto.randomUUID()}${ext}`;
-      const putUrl = await (env.BUCKET as any).createPresignedUrl("PUT", key, { expiresIn: 300 });
+
+      const r2 = new AwsClient({
+        accessKeyId: env.R2_ACCESS_KEY_ID,
+        secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      });
+      const signUrl = new URL(`https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET_NAME}/${key}`);
+      signUrl.searchParams.set("X-Amz-Expires", "300");
+      const signed = await r2.sign(signUrl, { method: "PUT", aws: { signQuery: true } });
+      const putUrl = signed.url;
+
       const publicUrl = `https://${env.R2_PUBLIC_DOMAIN}/${key}`;
 
       return {
