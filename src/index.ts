@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { z } from "zod";
 
 interface Env {
@@ -15,41 +16,21 @@ interface Env {
 // Cloudflare Access JWT verification
 // ---------------------------------------------------------------------------
 
+// Reused across requests in the same isolate so the JWKS is cached
+// (with jose's built-in cooldown) instead of refetched every time.
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+
 async function verifyAccessJwt(token: string, teamDomain: string, policyAud: string): Promise<void> {
-  const { keys } = await fetch(`${teamDomain}/cdn-cgi/access/certs`)
-    .then((r) => r.json() as Promise<{ keys: JsonWebKey[] }>);
-
-  const [headerB64, payloadB64, sigB64] = token.split(".");
-  if (!headerB64 || !payloadB64 || !sigB64) throw new Error("Malformed JWT");
-
-  const signingInput = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
-  const signature = base64UrlDecode(sigB64);
-
-  for (const jwk of keys) {
-    try {
-      const key = await crypto.subtle.importKey(
-        "jwk", jwk,
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-        false, ["verify"]
-      );
-      if (!await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, signature, signingInput)) continue;
-
-      const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(payloadB64))) as {
-        aud: string[];
-        exp: number;
-      };
-      if (payload.exp < Math.floor(Date.now() / 1000)) throw new Error("JWT expired");
-      if (!payload.aud.includes(policyAud)) throw new Error("JWT audience mismatch");
-      return;
-    } catch (_) { /* try next key */ }
+  let jwks = jwksCache.get(teamDomain);
+  if (!jwks) {
+    jwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+    jwksCache.set(teamDomain, jwks);
   }
-  throw new Error("JWT verification failed");
-}
 
-function base64UrlDecode(str: string): ArrayBuffer {
-  const padded = str.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = padded.length % 4 === 0 ? "" : "=".repeat(4 - (padded.length % 4));
-  return Uint8Array.from(atob(padded + pad), (c) => c.charCodeAt(0)).buffer;
+  await jwtVerify(token, jwks, {
+    issuer: teamDomain,
+    audience: policyAud,
+  });
 }
 
 // ---------------------------------------------------------------------------
