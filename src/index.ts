@@ -52,7 +52,7 @@ function buildMcpServer(env: Env): McpServer {
 
   server.tool(
     "get_upload_url",
-    `Get a presigned PUT URL to upload a file to R2, plus the permanent public URL to embed in a GitHub PR description. Allowed: ${allowedExts.join(", ")}`,
+    `Get a presigned PUT URL to upload a file to R2, plus its permanent public URL. The public URL is unguessable (random UUID) but not access-controlled — anyone with the link can view it. Use when the user wants a file available on the internet, for example, when adding screenshots into a GitHub PR. Allowed: ${allowedExts.join(", ")}`,
     {
       filename: z.string().describe(
         `File name e.g. 'before.png'. Allowed: ${allowedExts.join(" ")}`
@@ -81,10 +81,7 @@ function buildMcpServer(env: Env): McpServer {
             `curl -X PUT -T /path/to/${filename} "${putUrl}"`,
             `\`\`\``,
             ``,
-            `**Embed in PR**:`,
-            `\`\`\`markdown`,
-            `![${filename}](${publicUrl})`,
-            `\`\`\``,
+            `**Public URL**: ${publicUrl}`,
           ].join("\n"),
         }],
       };

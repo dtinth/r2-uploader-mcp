@@ -86,7 +86,7 @@ Take a screenshot of the rendered UI, upload it, and include it in the PR descri
 Claude Code will:
 1. Call `get_upload_url("screenshot.png")`
 2. Run the returned `curl` command to upload
-3. Embed `![screenshot](https://pub-xxx.r2.dev/screenshots/...)` in the PR body
+3. Embed `![screenshot](https://pub-xxx.r2.dev/uploads/...)` in the PR body using the returned public URL
 
 ### Tools
 
@@ -102,4 +102,5 @@ Claude Code will:
 - **File types allowed**: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` by default — configurable via the `ALLOWED_EXTS` variable
 - **Keys are namespaced** as `uploads/<date>/<uuid><ext>` by default — configurable via the `UPLOAD_PREFIX` variable
 - The R2 public bucket URL is permanent — uploaded files don't expire
+- Public URLs are unguessable (random UUID per file) but not access-controlled — anyone with the link can view the file
 - Access logs every connection attempt in the Cloudflare One dashboard
