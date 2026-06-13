@@ -1,3 +1,14 @@
+> [!WARNING]
+> **Deprecated.** I no longer use or maintain this.
+> Now I use [dtinth/s3-uploader-mcp](https://github.com/dtinth/s3-uploader-mcp) which supports any S3-compatible object storage service in addition to R2.
+> I originally built this MCP server with Cloudflare Workers because
+> (1) Cloudflare Workers has a built-in [integration with R2](https://developers.cloudflare.com/r2/api/workers/workers-api-usage/); and
+> (2) Cloudflare Access has [Managed OAuth](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/managed-oauth/) where it handles the OAuth 2 + DCR dance, making it easy to [secure MCP servers](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/secure-mcp-servers/) without having to handle the [MCP Authorization Flow](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) by ourselves (just [validate the `Cf-Access-Jwt-Assertion` header](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/) that Cloudflare Access injects into our MCP server).
+> However,
+> (1) The built-in integration with R2 doesn’t support generating presigned URLs, for that we need to generate Access Key and Secret Access Keys, negating the benefits of having a built-in integration; and
+> (2) Cloudflare Access has a [session duration](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/#session-durations) cap of 1 month, meaning I must re-authentiate with the MCP server monthly.
+> The resulting service is now hard to deploy and inconvenient to use, unlike the plug-and-play experience I envisioned, hence the pivot.
+
 # r2-uploader-mcp
 
 MCP server for uploading PR screenshots to Cloudflare R2, secured by Cloudflare Access.
