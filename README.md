@@ -63,30 +63,27 @@ Copy the public bucket URL (looks like `pub-abc123.r2.dev`).
 8. To connect from **claude.ai** (web), add `https://claude.ai/api/mcp/auth_callback` as an allowed **redirect URI** in the Managed OAuth settings
 9. Save — copy the **AUD tag** from the app's Basic Information (under Additional settings)
 
-### 4. Set the Worker's variables and secrets
+### 4. Set the Worker's secrets
 
-In the Cloudflare dashboard: **Workers & Pages → r2-uploader-mcp → Settings → Variables and Secrets**:
+In the Cloudflare dashboard: **Workers & Pages → r2-uploader-mcp → Settings → Variables and Secrets**,
+add each of these as a **Secret** (not a plaintext Variable):
 
-Variables:
-
-| Variable | Value |
+| Secret | Value |
 |---|---|
 | `TEAM_DOMAIN` | `https://yourteam.cloudflareaccess.com` |
 | `POLICY_AUD` | the AUD tag from step 3 |
 | `R2_PUBLIC_DOMAIN` | the public bucket domain from step 1 (e.g. `pub-abc123def456.r2.dev`) |
 | `R2_ACCOUNT_ID` | your Cloudflare account ID from step 2 |
 | `R2_BUCKET_NAME` | `r2-uploads` |
+| `R2_ACCESS_KEY_ID` | Access Key ID from step 2 |
+| `R2_SECRET_ACCESS_KEY` | Secret Access Key from step 2 |
 | `ALLOWED_EXTS` *(optional)* | comma-separated extensions, e.g. `.png,.jpg,.webm,.zip,.html`. Defaults to `.png,.jpg,.jpeg,.gif,.webp` |
 | `UPLOAD_PREFIX` *(optional)* | key prefix for uploaded objects, e.g. `screenshots/`. Defaults to `uploads/` |
 
-Secrets (mark as **Secret**, not plaintext Variable):
-
-| Secret | Value |
-|---|---|
-| `R2_ACCESS_KEY_ID` | Access Key ID from step 2 |
-| `R2_SECRET_ACCESS_KEY` | Secret Access Key from step 2 |
-
-These take effect immediately — no redeploy required.
+These take effect immediately — no redeploy required. Using Secrets (rather
+than the `vars` block in `wrangler.jsonc`) means they **won't be reset** by
+the automatic redeploys from the Workers Builds pipeline the deploy button
+sets up.
 
 ### 5. Connect to Claude
 

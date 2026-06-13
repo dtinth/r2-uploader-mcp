@@ -2,28 +2,18 @@
   "name": "r2-uploader-mcp",
   "main": "src/index.ts",
   "compatibility_date": "2025-06-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat"]
 
-  // These are placeholders — fill in the real values as Variables/Secrets in
-  // the Cloudflare dashboard (Workers & Pages → your worker → Settings →
-  // Variables and Secrets) after deploying. No redeploy needed; changes
-  // apply live.
+  // All configuration (TEAM_DOMAIN, POLICY_AUD, R2_PUBLIC_DOMAIN,
+  // R2_ACCOUNT_ID, R2_BUCKET_NAME, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
+  // and optionally ALLOWED_EXTS / UPLOAD_PREFIX) is set as Secrets in the
+  // Cloudflare dashboard (Workers & Pages → your worker → Settings →
+  // Variables and Secrets) after deploying — see README for details.
   //
-  // R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY (from an R2 API token) should
-  // be added as encrypted Secrets, not plaintext Variables — they aren't
-  // listed here.
-  //
-  // ALLOWED_EXTS is optional — comma-separated list of allowed file
-  // extensions, e.g. ".png,.jpg,.webm,.zip,.html". Defaults to
-  // ".png,.jpg,.jpeg,.gif,.webp" if unset.
-  //
-  // UPLOAD_PREFIX is optional — key prefix for uploaded objects, e.g.
-  // "screenshots/". Defaults to "uploads/" if unset.
-  "vars": {
-    "TEAM_DOMAIN": "https://<YOUR_TEAM_NAME>.cloudflareaccess.com",
-    "POLICY_AUD": "<YOUR_APPLICATION_AUD_TAG>",
-    "R2_PUBLIC_DOMAIN": "pub-<YOUR_R2_PUBLIC_DOMAIN>.r2.dev",
-    "R2_ACCOUNT_ID": "<YOUR_ACCOUNT_ID>",
-    "R2_BUCKET_NAME": "r2-uploads"
-  }
+  // Deliberately NOT using a `vars` block here: `vars` in this file are
+  // synced on every `wrangler deploy` (including the automatic redeploys
+  // from the Workers Builds pipeline the deploy button sets up), which
+  // would overwrite dashboard-configured values with placeholders.
+  // Secrets are never touched by `wrangler deploy` and persist across
+  // redeploys.
 }
