@@ -45,7 +45,8 @@ Copy the public bucket URL (looks like `pub-abc123.r2.dev`).
 5. Add a policy: allow your email address (or email domain)
 6. Configure your IdP (Google, GitHub, OTP, etc.)
 7. On the **Additional settings** tab, turn on **Managed OAuth** — this lets non-browser MCP clients (like Claude Code) authenticate via a standard OAuth 2.0 flow instead of a browser redirect
-8. Save — copy the **AUD tag** from the app's Basic Information (under Additional settings)
+8. To connect from **claude.ai** (web), add `https://claude.ai/api/mcp/auth_callback` as an allowed **redirect URI** in the Managed OAuth settings
+9. Save — copy the **AUD tag** from the app's Basic Information (under Additional settings)
 
 ### 3. Set the Worker's variables
 
