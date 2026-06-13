@@ -1,0 +1,28 @@
+{
+  "name": "r2-uploader-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // These are placeholders — fill in the real values as Variables in the
+  // Cloudflare dashboard (Workers & Pages → your worker → Settings →
+  // Variables) after deploying. No redeploy needed; changes apply live.
+  // ALLOWED_EXTS is optional — comma-separated list of allowed file
+  // extensions, e.g. ".png,.jpg,.webm,.zip,.html". Defaults to
+  // ".png,.jpg,.jpeg,.gif,.webp" if unset.
+  //
+  // UPLOAD_PREFIX is optional — key prefix for uploaded objects, e.g.
+  // "screenshots/". Defaults to "uploads/" if unset.
+  "vars": {
+    "TEAM_DOMAIN": "https://<YOUR_TEAM_NAME>.cloudflareaccess.com",
+    "POLICY_AUD": "<YOUR_APPLICATION_AUD_TAG>",
+    "R2_PUBLIC_DOMAIN": "pub-<YOUR_R2_PUBLIC_DOMAIN>.r2.dev"
+  },
+
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "r2-uploads"
+    }
+  ]
+}
