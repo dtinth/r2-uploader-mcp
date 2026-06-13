@@ -85,6 +85,25 @@ than the `vars` block in `wrangler.jsonc`) means they **won't be reset** by
 the automatic redeploys from the Workers Builds pipeline the deploy button
 sets up.
 
+The dashboard's "Edit variables" view has a bulk-paste mode — fill in the
+placeholders below and paste the whole block in:
+
+```
+TEAM_DOMAIN=https://yourteam.cloudflareaccess.com
+POLICY_AUD=<AUD tag from Access app>
+R2_PUBLIC_DOMAIN=pub-abc123def456.r2.dev
+R2_ACCOUNT_ID=<your Cloudflare account ID>
+R2_BUCKET_NAME=r2-uploads
+R2_ACCESS_KEY_ID=<R2 API token access key id>
+R2_SECRET_ACCESS_KEY=<R2 API token secret access key>
+ALLOWED_EXTS=.png,.jpg,.jpeg,.gif,.webp
+UPLOAD_PREFIX=uploads/
+```
+
+`ALLOWED_EXTS` and `UPLOAD_PREFIX` are optional — drop those two lines to use
+the defaults shown above. Make sure each one is added as a **Secret**, not a
+plaintext Variable.
+
 ### 5. Connect to Claude
 
 In Claude settings → MCP → Add server:
