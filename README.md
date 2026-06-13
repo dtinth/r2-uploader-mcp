@@ -39,9 +39,9 @@ Copy the public bucket URL (looks like `pub-abc123.r2.dev`).
 ### 2. Create a Cloudflare Access self-hosted app
 
 1. Go to [Cloudflare One](https://one.dash.cloudflare.com) → **Access controls → Applications**
-2. **Add an application → Self-hosted**
-3. Name: `R2 Uploader MCP`
-4. Application domain: `r2-uploader-mcp.<YOUR_SUBDOMAIN>.workers.dev` (your deployed Worker's URL)
+2. **Add an application → Self-hosted and private**
+3. Under **Destinations → Public hostnames**, enter your deployed Worker's subdomain and domain (e.g. `r2-uploader-mcp` . `<YOUR_SUBDOMAIN>.workers.dev`)
+4. Name: `R2 Uploader MCP`
 5. Add a policy: allow your email address (or email domain)
 6. Configure your IdP (Google, GitHub, OTP, etc.)
 7. Save — copy the **AUD tag** from the app's Basic Information
